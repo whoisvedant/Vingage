@@ -1,0 +1,9 @@
+{
+ "dataset": {"name": "DAiSEE", "labelled_clips": 8571, "train": 5358, "validation": 1429, "test": 1784, "subjects": 109, "note": "Official splits; no subject appears in more than one split."},
+ "models": [
+  {"id": "majority", "name": "Majority class", "color": "#8a94a6", "four": {"acc": 0.494, "f1": 0.165}, "binary": {"acc": 0.951, "f1": 0.487}, "recall": [0.000, 0.000, 1.000, 0.000], "recall_bin": [0.000, 1.000]},
+  {"id": "lr", "name": "Logistic regression", "color": "#0072B2", "four": {"acc": 0.485, "f1": 0.332}, "binary": {"acc": 0.822, "f1": 0.571}, "recall": [0.250, 0.536, 0.420, 0.553], "recall_bin": [0.580, 0.834]},
+  {"id": "xgb", "name": "XGBoost", "color": "#E69F00", "four": {"acc": 0.530, "f1": 0.301}, "binary": {"acc": 0.934, "f1": 0.562}, "recall": [0.000, 0.095, 0.649, 0.450], "recall_bin": [0.125, 0.976]},
+  {"id": "gru", "name": "GRU (sequence)", "color": "#009E73", "four": {"acc": 0.441, "f1": 0.302}, "binary": {"acc": 0.818, "f1": 0.553}, "recall": [0.250, 0.321, 0.356, 0.547], "recall_bin": [0.489, 0.835]}
+ ]
+}

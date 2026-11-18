@@ -1,0 +1,25 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>About · VINGAGE</title><link rel="stylesheet" href="/static/css/app.css"><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%233452d9'/%3E%3Cpath d='M7 20c3-9 6-9 9-4s6 5 9-4' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E">
+<script src="/static/js/app.js"></script></head><body data-title="About">
+<main>
+ <div class="phead"><div><h1>About VINGAGE</h1><p>Real-Time Audience Engagement Detection System: an Image and Video Processing project for CSET344 at Bennett University.</p></div></div>
+ <div class="grid g2 mb">
+  <div class="card"><h2>What it does</h2><p style="margin-top:10px;color:var(--ink2)">VINGAGE watches a room through an ordinary camera and estimates how engaged the audience is, as one group figure that updates every second. Presenters, teachers and event teams can see when attention rises or drops without filming or identifying anyone.</p>
+   <p style="margin-top:10px;color:var(--ink2)">The system is general purpose: a lecture, a workshop, a meeting or a talk. It reports trends for the group only, and hides every figure when fewer than three people are in view.</p></div>
+  <div class="card"><h2>Technology</h2><table style="margin-top:6px"><tbody>
+   <tr><td class="mut">Vision</td><td class="r">MediaPipe Face Landmarker, OpenCV, CLAHE, optical flow</td></tr>
+   <tr><td class="mut">Models</td><td class="r">Logistic regression, XGBoost, GRU, SHAP</td></tr>
+   <tr><td class="mut">Training data</td><td class="r">DAiSEE (8,571 labelled clips)</td></tr>
+   <tr><td class="mut">Server</td><td class="r">FastAPI, WebSocket</td></tr>
+   <tr><td class="mut">Interface</td><td class="r">HTML, CSS, JavaScript (no external services)</td></tr></tbody></table></div>
+ </div>
+ <div class="card mb"><div class="ch"><h2>Pages</h2></div><div class="three">
+  <div><b><a href="/">Live Monitor</a></b><p class="sm mut">Real-time group engagement, alerts and session recording.</p></div>
+  <div><b><a href="/sessions">Sessions</a></b><p class="sm mut">Review recorded sessions and export them as CSV.</p></div>
+  <div><b><a href="/model">Model &amp; Evidence</a></b><p class="sm mut">Pipeline, measured results, explanations and limitations.</p></div>
+  <div><b><a href="/privacy">Privacy by Design</a></b><p class="sm mut">What is processed, what is never stored, and the minimum-group rule.</p></div>
+  <div><b><a href="/settings">Settings</a></b><p class="sm mut">Group-size minimum, alert level, theme.</p></div></div></div>
+ <div class="card"><h2>Credits and data</h2><ul class="lists"><li>Project by Vedant Shandilya, Bennett University. Course: CSET344 Image and Video Processing.</li>
+  <li>Dataset: DAiSEE, Gupta, D'Cunha, Awasthi and Balasubramanian, "DAiSEE: Towards User Engagement Recognition in the Wild", arXiv:1609.01885. Access is by request and the data is not redistributed here.</li>
+  <li>Face model: Google MediaPipe Face Landmarker.</li></ul></div>
+</main></body></html>

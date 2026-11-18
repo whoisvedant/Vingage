@@ -1,0 +1,26 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Settings · VINGAGE</title><link rel="stylesheet" href="/static/css/app.css"><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%233452d9'/%3E%3Cpath d='M7 20c3-9 6-9 9-4s6 5 9-4' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E">
+<script src="/static/js/app.js"></script></head><body data-title="Settings">
+<main>
+ <div class="phead"><div><h1>Settings</h1><p>Changes apply immediately and last until the server restarts.</p></div></div>
+ <div class="grid g2">
+  <div class="card"><div class="ch"><h2>Monitoring</h2></div>
+   <div class="sw-row"><div style="flex:1"><b>Minimum group size (k)</b><div class="sm mut">No statistic is shown below this many people. Keep at 3 or more for real use.</div><input type="range" id="k" min="1" max="10" style="margin-top:10px"></div><div class="val" id="kv"></div></div>
+   <div id="kwarn" class="banner warn" hidden style="margin-top:12px">Below 3, a group figure can reveal an individual. Use only for testing.</div>
+   <div class="sw-row"><div style="flex:1"><b>Low-engagement alert</b><div class="sm mut">Adds an event when the engaged share stays below this level for 10 seconds.</div><input type="range" id="a" min="10" max="90" step="5" style="margin-top:10px"></div><div class="val" id="av"></div></div></div>
+  <div class="card"><div class="ch"><h2>System</h2></div>
+   <table><tbody id="sys"></tbody></table>
+   <div class="sw-row" style="margin-top:6px"><div><b>Appearance</b><div class="sm mut">Light suits projectors; dark suits dim rooms.</div></div><div class="tabs" id="th"><button data-t="light">Light</button><button data-t="dark">Dark</button></div></div>
+   <div class="sw-row"><div><b>Saved sessions</b><div class="sm mut">Remove all recorded session summaries.</div></div><button class="btn dng" id="clr">Clear all</button></div></div>
+ </div>
+</main>
+<script>
+document.addEventListener('DOMContentLoaded',async()=>{const $=id=>document.getElementById(id);let t;
+ const i=await VG.api('/api/info');$('k').value=i.k_min;$('a').value=Math.round(i.alert*100);
+ const show=()=>{$('kv').textContent=$('k').value;$('av').textContent=$('a').value+'%';$('kwarn').hidden=+$('k').value>=3};show();
+ const push=()=>{show();clearTimeout(t);t=setTimeout(()=>VG.post('/api/config',{k_min:+$('k').value,alert:$('a').value/100}),250)};$('k').oninput=push;$('a').oninput=push;
+ $('sys').innerHTML=[['Input',/^\d+$/.test(i.source)?'Webcam '+i.source:i.source],['Mode',i.mode==='simulated'?'Simulation':'Live camera'],['Model',i.model.type],['Task',i.model.task],['Features',i.model.features],['Window',i.window_s+' s at '+i.fps_target+' fps'],['Max faces',i.max_faces]].map(([a,b])=>`<tr><td class="mut">${a}</td><td class="r">${b}</td></tr>`).join('');
+ const mark=()=>document.querySelectorAll('#th button').forEach(b=>b.classList.toggle('on',b.dataset.t===document.documentElement.dataset.theme));mark();
+ document.querySelectorAll('#th button').forEach(b=>b.onclick=()=>{VG.theme(b.dataset.t);mark()});
+ $('clr').onclick=async()=>{if(confirm('Delete all saved sessions?')){const L=await VG.api('/api/sessions');for(const s of L)await VG.api('/api/sessions/'+s.id,{method:'DELETE'})}}});
+</script></body></html>

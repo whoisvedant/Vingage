@@ -1,0 +1,48 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Setup · VINGAGE</title><link rel="stylesheet" href="/static/css/app.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23100e0b'/%3E%3Ccircle cx='16' cy='16' r='7' fill='%23ff6a45'/%3E%3C/svg%3E">
+<script src="/static/js/app.js"></script><script src="/static/js/charts.js"></script></head><body>
+<main class="wrap">
+ <div class="ph"><div><div class="lbl">Connect and configure</div><h1 style="margin-top:14px">Setup.</h1><p>Choose the camera, tune the privacy minimum, and set the alert level. Changes apply instantly and last until the server restarts.</p></div><div class="chip" id="cur"><i></i><span></span></div></div>
+ <span class="lbl">Camera source</span>
+ <div class="g g2" style="margin-top:16px">
+  <div class="opt" id="o-cam"><h3>This computer</h3><p>The built-in or USB webcam. If the picture is wrong, try another number.</p><div class="seg" id="camsel" style="align-self:flex-start"><button data-s="0">Cam 0</button><button data-s="1">Cam 1</button><button data-s="2">Cam 2</button><button data-s="3">Cam 3</button></div></div>
+  <div class="opt" id="o-phone"><h3>Phone, in the browser <span class="tag" style="vertical-align:6px;margin-left:6px">Recommended</span></h3><p>No app needed. Phone and laptop must be on the same Wi-Fi.</p>
+   <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap"><div class="qr"><img id="qr" alt="QR code"></div><ol style="margin:0;padding-left:18px;color:var(--ink2);font-size:13.5px;flex:1;min-width:200px"><li>Scan the code with the phone camera.</li><li>Accept the security warning once. The certificate is made on this laptop.</li><li>Tap <b>Start camera</b>, then press the button below.</li></ol></div>
+   <div class="cap" id="phurl" style="word-break:break-all;text-transform:none;letter-spacing:0"></div>
+   <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="btn pri sm" id="usephone">Use the phone</button><span class="chip" id="phstat"><i></i><span>Waiting for phone</span></span></div></div>
+  <div class="opt" id="o-url"><h3>Phone app or IP camera</h3><p>Any app that shares a stream URL (IP Webcam, DroidCam and similar), or an RTSP camera.</p><div style="display:flex;gap:10px"><input type="text" id="urlin" placeholder="http://192.168.1.5:8080/video"><button class="btn sm" id="useurl">Connect</button></div></div>
+  <div class="opt" id="o-file"><h3>Video file</h3><p>Rehearse with a recorded clip. It loops. Give the full path on this computer.</p><div style="display:flex;gap:10px"><input type="text" id="filein" placeholder="C:\Users\you\Videos\lecture.mp4"><button class="btn sm" id="usefile">Play</button></div></div>
+ </div>
+ <div class="g g2 sec" style="gap:48px">
+  <div><span class="lbl">Monitoring</span>
+   <div class="row2"><div style="flex:1"><b>Minimum group size (k)</b><div class="mut" style="font-size:13px">No statistic is shown below this many people. Keep at 3 or more for real use.</div><input type="range" id="k" min="1" max="10" style="margin-top:12px"></div><div class="val" id="kv"></div></div>
+   <div id="kwarn" class="banner" hidden style="margin:14px 0 0">Below 3, a group figure can reveal an individual. Use only for testing.</div>
+   <div class="row2"><div style="flex:1"><b>Attention cone (degrees)</b><div class="mut" style="font-size:13px">How far a head may turn from the focus direction and still count as facing it. Wider is more forgiving.</div><input type="range" id="ft" min="15" max="60" step="5" style="margin-top:12px"></div><div class="val" id="ftv"></div></div>
+   <div class="row2"><div style="flex:1"><b>Low-attention alert</b><div class="mut" style="font-size:13px">Adds a moment when the attention share stays below this level for 10 seconds.</div><input type="range" id="a" min="10" max="90" step="5" style="margin-top:12px"></div><div class="val" id="av"></div></div></div>
+  <div><span class="lbl">System</span><table style="margin-top:6px"><tbody id="sys"></tbody></table>
+   <div class="row2"><div><b>Appearance</b><div class="mut" style="font-size:13px">Dark suits a dim hall; light suits a bright room.</div></div><div class="seg" id="th"><button data-t="light">Light</button><button data-t="dark">Dark</button></div></div>
+   <div class="row2"><div><b>Saved sessions</b><div class="mut" style="font-size:13px">Remove every recorded session summary.</div></div><button class="btn sm dng" id="clr">Clear all</button></div></div>
+ </div>
+</main>
+<script>
+document.addEventListener('DOMContentLoaded',async()=>{const $=id=>document.getElementById(id);let t,cur='';
+ const setSrc=async s=>{await VG.post('/api/source',{source:String(s)})};
+ document.querySelectorAll('#camsel button').forEach(b=>b.onclick=()=>setSrc(b.dataset.s));
+ $('usephone').onclick=()=>setSrc('phone');$('useurl').onclick=()=>$('urlin').value.trim()&&setSrc($('urlin').value.trim());$('usefile').onclick=()=>$('filein').value.trim()&&setSrc($('filein').value.trim().replace(/^"|"$/g,''));
+ function mark(s){cur=s.source;const isCam=/^\d$/.test(cur),isPh=cur==='phone',isUrl=/^(https?|rtsp):/i.test(cur),isFile=!isCam&&!isPh&&!isUrl;
+  $('o-cam').classList.toggle('act',isCam);$('o-phone').classList.toggle('act',isPh);$('o-url').classList.toggle('act',isUrl);$('o-file').classList.toggle('act',isFile);
+  document.querySelectorAll('#camsel button').forEach(b=>b.classList.toggle('on',isCam&&b.dataset.s===cur));
+  $('cur').className='chip '+(s.error?'off':'on');$('cur').lastChild.textContent=(s.error?'Problem: '+s.error:'Active: '+(isCam?'webcam '+cur:isPh?'phone':cur.split(/[\\/]/).pop())+' \u00b7 '+s.fps+' fps')}
+ VG.on(mark);
+ async function poll(){try{const c=await VG.api('/api/connect');if(!$('qr').dataset.u){$('qr').src='/api/qr.svg?text='+encodeURIComponent(c.phone_url);$('qr').dataset.u=1;$('phurl').textContent=c.phone_url}
+  $('phstat').className='chip '+(c.phone_live?'on':'');$('phstat').lastChild.textContent=c.phone_live?'Phone streaming':'Waiting for phone'}catch(e){}}
+ poll();setInterval(poll,2000);
+ const i=await VG.api('/api/info');$('k').value=i.k_min;$('a').value=Math.round(i.alert*100);$('ft').value=i.focus_tol;
+ const show=()=>{$('kv').textContent=$('k').value;$('av').textContent=$('a').value+'%';$('ftv').textContent=$('ft').value+'\u00b0';$('kwarn').hidden=+$('k').value>=3};show();
+ const push=()=>{show();clearTimeout(t);t=setTimeout(()=>VG.post('/api/config',{k_min:+$('k').value,alert:$('a').value/100,focus_tol:+$('ft').value}),250)};$('k').oninput=push;$('a').oninput=push;$('ft').oninput=push;
+ $('sys').innerHTML=[['Mode',i.mode==='simulated'?'Simulation':'Live camera'],['Model',i.model.type],['Task',i.model.task],['Features',i.model.features],['Scoring window',i.window_s+' s at '+i.fps_target+' samples/s'],['Max faces',i.max_faces]].map(([a,b])=>`<tr><td class="mut">${a}</td><td class="r">${b}</td></tr>`).join('');
+ const mk=()=>document.querySelectorAll('#th button').forEach(b=>b.classList.toggle('on',b.dataset.t===document.documentElement.dataset.theme));mk();
+ document.querySelectorAll('#th button').forEach(b=>b.onclick=()=>{VG.theme(b.dataset.t);mk()});
+ $('clr').onclick=async()=>{if(confirm('Delete all saved sessions?')){const L=await VG.api('/api/sessions');for(const s of L)await VG.api('/api/sessions/'+s.id,{method:'DELETE'})}}});
+</script></body></html>

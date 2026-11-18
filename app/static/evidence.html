@@ -1,0 +1,33 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Evidence · VINGAGE</title><link rel="stylesheet" href="/static/css/app.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23100e0b'/%3E%3Ccircle cx='16' cy='16' r='7' fill='%23ff6a45'/%3E%3C/svg%3E">
+<script src="/static/js/app.js"></script><script src="/static/js/charts.js"></script></head><body>
+<main class="wrap">
+ <div class="ph"><div><div class="lbl">How well does it work</div><h1 style="margin-top:14px">The <em>evidence.</em></h1><p>How engagement is estimated, how it scores on a public benchmark, and where it falls short. Every number was measured on the official DAiSEE test split in a single run.</p></div></div>
+ <div class="steps">
+  <div class="step"><div class="n">1</div><b>Capture</b><span>Frames from the camera, brightened with CLAHE when the scene is dark.</span></div>
+  <div class="step"><div class="n">2</div><b>Face landmarks</b><span>MediaPipe Face Landmarker: 478 points, 52 blendshapes, head pose.</span></div>
+  <div class="step"><div class="n">3</div><b>Signals</b><span>Head yaw, pitch, roll; eye openness; gaze; blinks; brows and mouth; motion.</span></div>
+  <div class="step"><div class="n">4</div><b>Window model</b><span>Statistics over 10 s at 5 samples a second feed a logistic regression: engaged or not.</span></div>
+  <div class="step"><div class="n">5</div><b>Aggregate</b><span>Scores merge into one group figure, only if at least k people are present.</span></div></div>
+ <div class="panel sec" style="margin-top:28px"><span class="lbl">Two signals, kept separate</span>
+  <div class="g g2" style="margin-top:14px;gap:36px"><div><h3 class="serif" style="font-size:32px;line-height:1.05">Attention on the focus</h3><p class="mut" style="font-size:13.5px;margin-top:8px">The headline number. Each tracked head is compared with the direction of the presenter or screen: set from the camera direction or by a 3-second calibration. It is plain geometry, instant, and needs no training. <b>Not yet validated:</b> it has not been measured against hand-labelled footage.</p></div>
+  <div><h3 class="serif" style="font-size:32px;line-height:1.05">Engagement model</h3><p class="mut" style="font-size:13.5px;margin-top:8px">A logistic regression trained on DAiSEE (single learners at a laptop). It scores behaviour over 10 seconds: blinks, eye closure, movement, head pose. It is the benchmarked, trained part of the project, with the results below.</p></div></div></div>
+ <div class="g g4 sec" id="facts"></div>
+ <div class="sec"><div style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:6px"><div><span class="lbl">Results on the DAiSEE test split</span><p class="mut" style="font-size:13.5px;margin-top:8px;max-width:60ch">Macro-F1 gives every class equal weight, so rare classes count. It is the headline metric here.</p></div><div class="seg" id="task"><button data-t="four" class="on">Four levels</button><button data-t="binary">Engaged vs not</button></div></div>
+  <table><thead><tr><th>Model</th><th class="r">Accuracy</th><th class="r">Macro-F1</th><th style="width:34%"></th></tr></thead><tbody id="rt"></tbody></table></div>
+ <div class="sec"><div style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:26px"><div><span class="lbl">Per-class recall</span><p class="mut" style="font-size:13.5px;margin-top:8px">The share of each true class the model finds. A model that ignores a class scores zero.</p></div><div class="legend" id="gl-leg"></div></div>
+  <div class="gb" id="gb"></div><div class="gl" id="gl"></div></div>
+ <div class="g g2 sec">
+  <div><span class="lbl">What drives predictions · SHAP on XGBoost</span><img class="fig" style="margin-top:14px" src="/static/img/shap.png" alt="SHAP feature importance"><p class="mut" style="font-size:13px;margin-top:12px">Mean absolute SHAP value of the 15 most influential features, four-level task. Eye signals lead: variation in left blink, the share of closed-eye frames (PERCLOS) and right-eye inward look. This shows what the model uses, not what causes engagement.</p></div>
+  <div><span class="lbl">Limits, stated plainly</span>
+   <ul class="plain"><li><b>Modest accuracy.</b> Four-level macro-F1 is 0.33 at best. DAiSEE labels are noisy and badly unbalanced.</li><li><b>Rare classes.</b> Level 0 is 0.2% of the test set, about 4 clips, so its recall means little.</li><li><b>Single run.</b> One seed, default settings, no significance test. Small gaps are not wins.</li><li><b>Domain gap.</b> Trained on one person facing a laptop. A classroom camera showing many people at an angle is not yet validated.</li><li><b>Group level only.</b> The product reports audience trends, never judgements about a person.</li></ul></div></div>
+</main>
+<script>
+document.addEventListener('DOMContentLoaded',async()=>{const R=await VG.api('/static/data/results.json'),$=id=>document.getElementById(id);let task='four';
+ const d=R.dataset;$('facts').innerHTML=[['Dataset',d.name],['Labelled clips',d.labelled_clips.toLocaleString()],['Train / val / test',`${d.train.toLocaleString()} / ${d.validation.toLocaleString()} / ${d.test.toLocaleString()}`],['Subjects',d.subjects+' (no overlap)']].map(([k,v])=>`<div class="fact"><span class="lbl">${k}</span><div class="v">${v}</div></div>`).join('');
+ function table(){const best=Math.max(...R.models.map(m=>m[task].f1));$('rt').innerHTML=R.models.map(m=>`<tr><td><span class="sw" style="background:${m.color}"></span>${m.name}</td><td class="r num">${m[task].acc.toFixed(3)}</td><td class="r num ${m[task].f1===best?'best':''}">${m[task].f1.toFixed(3)}</td><td><div class="meter"><i style="width:${m[task].f1*100}%;background:${m.color}"></i></div></td></tr>`).join('')}
+ document.querySelectorAll('#task button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#task button').forEach(x=>x.classList.remove('on'));b.classList.add('on');task=b.dataset.t;table()});table();
+ const names=['Level 0','Level 1','Level 2','Level 3'];$('gl-leg').innerHTML=R.models.map(m=>`<span><span class="sw" style="background:${m.color}"></span>${m.name}</span>`).join('');
+ $('gb').innerHTML=names.map((n,i)=>`<div class="grp">${R.models.map(m=>`<div class="b" style="height:${Math.max(m.recall[i]*100,1.5)}%;background:${m.color}" title="${m.name}: ${m.recall[i].toFixed(3)}"><em>${m.recall[i].toFixed(2)}</em></div>`).join('')}</div>`).join('');$('gl').innerHTML=names.map(n=>`<div>${n}</div>`).join('')});
+</script></body></html>

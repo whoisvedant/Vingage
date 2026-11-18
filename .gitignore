@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+app/models/*.task
+app/models/*.json
+*.avi
+*.mp4
+.venv/
+app/data/

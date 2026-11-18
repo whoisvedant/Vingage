@@ -1,0 +1,85 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Room · VINGAGE</title><link rel="stylesheet" href="/static/css/app.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23100e0b'/%3E%3Ccircle cx='16' cy='16' r='7' fill='%23ff6a45'/%3E%3C/svg%3E">
+<script src="/static/js/app.js"></script><script src="/static/js/charts.js"></script></head><body>
+<main class="wrap">
+ <div id="banners"></div>
+ <div class="top2">
+  <div class="viewcol">
+   <div class="vh"><span class="lbl">Live view · this computer only · never recorded</span>
+    <div style="display:flex;gap:8px;align-items:center"><label class="sw2"><input type="checkbox" id="blur"><span>Blur faces</span></label><button class="btn sm" id="vtoggle">Hide</button></div></div>
+   <div class="cam wide"><img id="view" alt="Live camera view" src="/api/stream.mjpg"><div id="vmsg" class="vmsg">Starting camera…</div></div>
+   <div class="vf"><span class="key"><i style="background:#3cbe6e"></i>Facing the focus</span><span class="key"><i style="background:#e6503c"></i>Looking elsewhere</span><span class="cap" id="vinfo" style="margin:0 0 0 auto"></span></div>
+  </div>
+  <div class="herocol">
+   <div class="lbl rise" id="kicker" style="--d:0">Attention on the focus</div>
+   <h1 class="say rise" id="say" style="--d:1">Listening in…</h1>
+   <div class="bignum sm rise" id="big" style="--d:2">–</div>
+   <div class="cap rise" id="cap" style="--d:3"></div>
+   <div class="focus rise" style="--d:4"><div class="lbl">Where is the focus?</div>
+    <p id="ftext">The camera direction. Works when the camera is at the presenter or screen.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn sm pri" id="fcal">Set focus: audience looks at the presenter</button><button class="btn sm" id="freset">Reset</button></div></div>
+  </div>
+ </div>
+ <div class="stage">
+  <div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:12px;flex-wrap:wrap"><div class="seg" id="metric"><button data-m="att" class="on">Attention</button><button data-m="share">Engagement model</button></div><div class="seg" id="range"><button data-r="60">1 min</button><button data-r="180" class="on">3 min</button><button data-r="0">All</button></div></div><div class="chart" id="chart"></div></div>
+  <div>
+   <span class="lbl">People counted</span><div style="display:flex;align-items:baseline;gap:12px;margin-top:10px"><span class="serif" style="font-size:64px;line-height:1" id="n">–</span><span class="mut lbl" id="nsub"></span></div><div class="ppl" id="dots"></div>
+   <hr class="rule" style="margin:24px 0"><span class="lbl">Engagement model (trained on DAiSEE)</span><div style="display:flex;align-items:baseline;gap:14px;margin:10px 0 12px"><span class="serif" style="font-size:44px;line-height:1" id="mshare">–</span><span class="lbl" id="mscore"></span></div><div class="meter"><i id="scorebar" style="width:0"></i></div>
+   <hr class="rule" style="margin:24px 0"><span class="lbl">Moments</span><div class="feed" id="feed" style="margin-top:6px"></div>
+  </div>
+ </div>
+ <div class="ledger">
+  <div><span class="lbl">Average</span><div class="v" id="s-avg">–</div></div><div><span class="lbl">Peak</span><div class="v" id="s-peak">–</div></div><div><span class="lbl">Lowest</span><div class="v" id="s-low">–</div></div><div><span class="lbl">Time above alert</span><div class="v" id="s-above">–</div></div>
+  <div><span class="lbl">Recording</span><div class="v" id="s-rec">Off</div></div>
+ </div>
+ <div class="sec"><span class="lbl">Session</span><div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;max-width:760px"><input type="text" id="sname" placeholder="Name this session (optional)" style="flex:1;min-width:200px"><input type="text" id="mlabel" placeholder="What is happening now? e.g. Slide 4, Q&amp;A" style="flex:1;min-width:200px;display:none"><button class="btn" id="mbtn" style="display:none">Mark moment</button><button class="btn pri" id="sbtn"></button><button class="btn" id="present"></button></div>
+   <p class="mut" style="font-size:13px;margin-top:14px;max-width:60ch">Recording keeps only group numbers, so you can replay the session afterwards. While recording, press Mark moment to note what is happening (a slide, a topic, a question) so a later drop in attention can be explained. Nothing about any person is saved.</p></div>
+</main>
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+ const $=id=>document.getElementById(id);let range=180,metric='att',last=null,viewOn=true;
+ const chart=new LineChart($('chart'),{rel:true,empty:'The chart starts once enough people are in view'});
+ $('present').innerHTML=svg('full')+'Presenter view';
+ $('present').onclick=()=>{document.body.classList.toggle('presenter');document.body.classList.contains('presenter')?document.documentElement.requestFullscreen?.().catch(()=>{}):document.fullscreenElement&&document.exitFullscreen()};
+ addEventListener('keydown',e=>{if(e.key==='Escape')document.body.classList.remove('presenter')});document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement)document.body.classList.remove('presenter')});
+ document.querySelectorAll('#range button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#range button').forEach(x=>x.classList.remove('on'));b.classList.add('on');range=+b.dataset.r;last&&render(last)});
+ document.querySelectorAll('#metric button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#metric button').forEach(x=>x.classList.remove('on'));b.classList.add('on');metric=b.dataset.m;last&&render(last)});
+ document.addEventListener('themechange',()=>last&&render(last));
+ $('mbtn').onclick=async()=>{await VG.post('/api/session/mark',{label:$('mlabel').value||'Marker'});$('mlabel').value=''};
+ $('sbtn').onclick=async()=>{const a=last&&last.session.active;await VG.post(a?'/api/session/stop':'/api/session/start',{name:$('sname').value});$('sname').value=''};
+ $('blur').onchange=()=>VG.post('/api/blur/'+($('blur').checked?'on':'off'));
+ $('vtoggle').onclick=()=>{viewOn=!viewOn;$('vtoggle').textContent=viewOn?'Hide':'Show';$('view').style.display=viewOn?'':'none';$('view').src=viewOn?'/api/stream.mjpg?'+Date.now():'';$('vmsg').style.display=viewOn?'':'none';if(!viewOn){$('vmsg').style.display='';$('vmsg').textContent='Live view hidden'}};
+ $('view').onload=()=>{$('vmsg').style.display='none'};
+ $('fcal').onclick=()=>VG.post('/api/focus/calibrate');$('freset').onclick=()=>VG.post('/api/focus/reset');
+ function say(s){const ok=s.status==='ok',a=s.att_share;
+  if(s.error)return['No <em>signal.</em>',s.error];
+  if(s.status==='warming_up')return['Listening <em>in\u2026</em>','Starting up'];
+  if(!ok)return['Waiting for <em>the room.</em>',`${s.faces_in_view} of ${s.k_min} people in view \u00b7 statistics stay hidden below ${s.k_min}`];
+  return [a>=.8?'Eyes on <em>the front.</em>':a>=.55?'Mostly <em>with you.</em>':a>=.3?'Attention is <em>drifting.</em>':'You are <em>losing the room.</em>']}
+ function render(s){last=s;const ok=s.status==='ok',h=s.history,b=[];
+  if(s.mode==='simulated')b.push(['info','Simulation: this audience is generated for testing. The numbers are not measurements.']);
+  if(s.k_min<3)b.push(['','Privacy minimum lowered to '+s.k_min+'. For testing only: with fewer than 3 people a group figure can reveal an individual.']);
+  $('banners').innerHTML=b.map(([c,t])=>`<div class="banner ${c}">${t}</div>`).join('');
+  const sy=say(s);$('say').innerHTML=sy[0];
+  let d='';if(ok&&h.length>30){const old=h[h.length-31].att;if(old!=null){const dv=Math.round((s.att_share-old)*100);d=dv?` \u00b7 ${dv>0?'\u25b2':'\u25bc'} ${Math.abs(dv)} pts / 30 s`:' \u00b7 steady'}}
+  $('cap').textContent=ok?`${s.n} people \u00b7 ${VG.pct(s.att_share)} facing the focus${d}`:(sy[1]||'');
+  $('big').innerHTML=ok?`${Math.round(s.att_share*100)}<small>%</small>`:'\u2013';$('big').className='bignum sm '+(ok?(s.att_share>=.6?'good':s.att_share<.3?'low':''):'');
+  const f=s.focus;$('ftext').textContent=f.calibrating?'Calibrating: ask everyone to look at the presenter or screen. Hold for 3 seconds\u2026':(f.yaw===0&&f.pitch===0)?'The camera direction. Works when the camera is at the presenter or screen.':`Set from the audience: head turned ${f.yaw}\u00b0 sideways, ${f.pitch}\u00b0 up/down from the camera. Looking within about \u00b1${f.tol}\u00b0 counts as facing it.`;
+  $('fcal').disabled=f.calibrating;
+  $('n').textContent=ok?s.n:s.faces_in_view;$('nsub').textContent=ok?`min ${s.k_min} met`:`need ${s.k_min}`;
+  $('dots').innerHTML=Array.from({length:Math.max(s.k_min,ok?s.n:s.faces_in_view,3)},(_,i)=>`<i class="${i<(ok?s.n:s.faces_in_view)?'f':''}"></i>`).join('');
+  const mok=ok&&s.engaged_share!=null;$('mshare').textContent=mok?VG.pct(s.engaged_share):'\u2013';$('mscore').textContent=mok?'score '+s.mean_score.toFixed(2):(ok?'needs 5 s of footage':'');$('scorebar').style.width=mok?Math.round(s.mean_score*100)+'%':'0';
+  const se=s.session;$('s-rec').textContent=se.active?mmss(se.elapsed):'Off';$('s-rec').style.color=se.active?'var(--verm)':'';
+  $('sbtn').innerHTML=se.active?svg('stop')+'Stop recording':svg('play')+'Record session';$('sbtn').className='btn '+(se.active?'dng':'pri');$('sname').style.display=se.active?'none':'';$('mlabel').style.display=se.active?'':'none';$('mbtn').style.display=se.active?'':'none';
+  const key=metric==='att'?'att':'share',all=h.filter(p=>p[key]!=null).map(p=>({...p,share:p[key]})),now=all.length?all[all.length-1].t:0,pts=range?all.filter(p=>now-p.t<=range):all;
+  const sm=pts.map((p,i)=>{const w=pts.slice(Math.max(0,i-4),i+1);return {...p,share:w.reduce((a,q)=>a+q.share,0)/w.length}});
+  chart.o.label=metric==='att'?'facing the focus':'engaged (model)';chart.set(sm,s.alert,s.events.filter(e=>e.type!=='info'));
+  const v=pts.map(p=>p.share);$('s-avg').textContent=v.length?VG.pct(v.reduce((a,c)=>a+c,0)/v.length):'\u2013';$('s-peak').textContent=v.length?VG.pct(Math.max(...v)):'\u2013';$('s-low').textContent=v.length?VG.pct(Math.min(...v)):'\u2013';$('s-above').textContent=v.length?VG.pct(v.filter(x=>x>=s.alert).length/v.length):'\u2013';
+  $('feed').innerHTML=s.events.length?s.events.map(e=>`<div class="ev ${e.type}"><b>${mmss(e.t)}</b><span>${e.msg}</span></div>`).join(''):'<div class="ev"><span class="mut">Nothing yet</span></div>';
+  if(!s.ready&&viewOn)$('vmsg').textContent='Loading the face model\u2026';
+  $('blur').checked=s.blur;
+  $('vinfo').textContent=`Camera ${s.cam_fps} fps \u00b7 analysis ${s.fps} fps \u00b7 ${s.det_ms} ms`}
+ VG.on(render);
+});
+</script></body></html>

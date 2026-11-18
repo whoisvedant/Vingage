@@ -1,0 +1,25 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sessions · VINGAGE</title><link rel="stylesheet" href="/static/css/app.css"><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%233452d9'/%3E%3Cpath d='M7 20c3-9 6-9 9-4s6 5 9-4' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E">
+<script src="/static/js/app.js"></script><script src="/static/js/charts.js"></script></head><body data-title="Sessions">
+<main>
+ <div class="phead"><div><h1>Sessions</h1><p>Recorded sessions keep aggregate statistics only: time, engaged share, mean score and head count. Nothing about any individual is saved.</p></div>
+  <a class="btn pri" href="/" style="text-decoration:none">Go to Live Monitor</a></div>
+ <div class="card mb" id="listcard"><div id="list"></div></div>
+ <div class="card" id="detail" hidden>
+  <div class="ch"><div><h2 id="d-name"></h2><div class="sm mut" id="d-meta"></div></div><div style="display:flex;gap:8px"><a class="btn" id="d-csv" style="text-decoration:none"></a><button class="btn dng" id="d-del"></button></div></div>
+  <div class="grid g4 mb"><div class="stat"><div class="k">Average engaged</div><div class="v" id="d-avg"></div></div><div class="stat"><div class="k">Peak</div><div class="v" id="d-peak"></div></div><div class="stat"><div class="k">Lowest</div><div class="v" id="d-low"></div></div><div class="stat"><div class="k">Average people</div><div class="v" id="d-n"></div></div></div>
+  <div class="chart" id="d-chart"></div></div>
+</main>
+<script>
+document.addEventListener('DOMContentLoaded',()=>{const $=id=>document.getElementById(id);let chart,sel=null;
+ async function load(){const L=await VG.api('/api/sessions');
+  $('list').innerHTML=L.length?`<table><thead><tr><th>Session</th><th>Started</th><th class="r">Duration</th><th class="r">Avg engaged</th><th class="r">Peak</th><th class="r">Low</th><th class="r">Avg people</th></tr></thead><tbody>${L.map(s=>`<tr class="row ${s.id===sel?'sel':''}" data-id="${s.id}"><td><b>${s.name.replace(/</g,'&lt;')}</b></td><td>${VG.date(s.start)}</td><td class="r num">${VG.dur(s.duration)}</td><td class="r num">${VG.pct(s.mean_share)}</td><td class="r num">${VG.pct(s.peak)}</td><td class="r num">${VG.pct(s.low)}</td><td class="r num">${s.mean_n?s.mean_n.toFixed(1):'–'}</td></tr>`).join('')}</tbody></table>`
+   :`<div class="empty"><h3>No sessions recorded yet</h3><p>Open the Live Monitor, name a session and press Record. When you stop it, the summary appears here.</p></div>`;
+  document.querySelectorAll('tr.row').forEach(r=>r.onclick=()=>open(r.dataset.id))}
+ async function open(id){sel=id;const s=await VG.api('/api/sessions/'+id);$('detail').hidden=false;$('d-name').textContent=s.name;$('d-meta').textContent=VG.date(s.start)+' · '+VG.dur(s.duration)+' · '+s.samples+' samples';
+  $('d-avg').textContent=VG.pct(s.mean_share);$('d-peak').textContent=VG.pct(s.peak);$('d-low').textContent=VG.pct(s.low);$('d-n').textContent=s.mean_n?s.mean_n.toFixed(1):'–';
+  $('d-csv').href=`/api/sessions/${id}/csv`;$('d-csv').innerHTML=svg('down')+'Export CSV';$('d-del').innerHTML=svg('trash')+'Delete';
+  chart=chart||new LineChart($('d-chart'),{empty:'This session has no recorded samples (audience below the privacy minimum)'});chart.set(s.points,null);
+  $('d-del').onclick=async()=>{if(confirm('Delete this session?')){await VG.api('/api/sessions/'+id,{method:'DELETE'});sel=null;$('detail').hidden=true;load()}};load();$('detail').scrollIntoView({behavior:'smooth',block:'nearest'})}
+ load();document.addEventListener('themechange',()=>chart&&chart.draw())});
+</script></body></html>

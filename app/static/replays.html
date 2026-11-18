@@ -1,0 +1,38 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Replays · VINGAGE</title><link rel="stylesheet" href="/static/css/app.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23100e0b'/%3E%3Ccircle cx='16' cy='16' r='7' fill='%23ff6a45'/%3E%3C/svg%3E">
+<script src="/static/js/app.js"></script><script src="/static/js/charts.js"></script></head><body>
+<main class="wrap">
+ <div class="ph"><div><div class="lbl">Recorded sessions</div><h1 style="margin-top:14px">Replays</h1><p>Each recording keeps only group numbers: time, attention share, engagement-model score and head count. Nothing about any individual is saved.</p></div><a class="btn pri" href="/room">Back to the room</a></div>
+ <div id="list"></div>
+ <div id="detail" hidden style="margin-top:40px"><hr class="rule" style="margin-bottom:28px">
+  <div style="display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:flex-end"><div><h2 class="serif" style="font-size:48px;line-height:1" id="d-name"></h2><div class="cap" id="d-meta"></div></div><div style="display:flex;gap:10px"><a class="btn sm" id="d-csv"></a><button class="btn sm dng" id="d-del"></button></div></div>
+  <div class="ledger" style="margin-top:26px;grid-template-columns:repeat(4,minmax(0,1fr))"><div><span class="lbl">Average attention</span><div class="v" id="d-avg"></div></div><div><span class="lbl">Peak</span><div class="v" id="d-peak"></div></div><div><span class="lbl">Lowest</span><div class="v" id="d-low"></div></div><div><span class="lbl">Average people</span><div class="v" id="d-n"></div></div></div>
+  <div class="chart" id="d-chart" style="margin-top:24px"></div>
+  <div style="margin-top:36px"><span class="lbl">Where attention dropped, and what was happening</span><div id="d-over" class="mut" style="margin-top:10px;font-size:15px"></div><div id="d-moments" style="margin-top:14px"></div></div></div>
+</main>
+<script>
+document.addEventListener('DOMContentLoaded',()=>{const $=id=>document.getElementById(id);let chart,sel=null;
+ async function load(){const L=await VG.api('/api/sessions');
+  $('list').innerHTML=L.length?`<table><thead><tr><th>Session</th><th>Started</th><th class="r">Length</th><th class="r">Avg attention</th><th class="r">Peak</th><th class="r">Low</th><th class="r">Avg people</th></tr></thead><tbody>${L.map(s=>`<tr class="row ${s.id===sel?'sel':''}" data-id="${s.id}"><td><b>${s.name.replace(/</g,'&lt;')}</b></td><td class="mut">${VG.date(s.start)}</td><td class="r num">${VG.dur(s.duration)}</td><td class="r num">${VG.pct(s.mean_share)}</td><td class="r num">${VG.pct(s.peak)}</td><td class="r num">${VG.pct(s.low)}</td><td class="r num">${s.mean_n?s.mean_n.toFixed(1):'–'}</td></tr>`).join('')}</tbody></table>`
+  :`<div class="panel" style="padding:64px 24px;text-align:center"><div class="serif" style="font-size:44px;line-height:1.05">Nothing recorded <em>yet.</em></div><p class="mut" style="margin:14px auto 24px;max-width:44ch">In the room, name a session and press Record. When you stop it, the summary lands here.</p><a class="btn pri" href="/room">Go to the room</a></div>`;
+  document.querySelectorAll('tr.row').forEach(r=>r.onclick=()=>open(r.dataset.id))}
+
+ const THR=0.6,MINDUR=8,MERGE=5;
+ function analyse(s){const P=s.points.map(p=>({t:p.t,v:p.att??p.share})).filter(p=>p.v!=null);if(P.length<2)return{drops:[],above:null};
+  const drops=[];let cur=null;P.forEach(p=>{if(p.v<THR){if(!cur)cur={a:p.t,b:p.t,lo:p.v,at:p.t};cur.b=p.t;if(p.v<cur.lo){cur.lo=p.v;cur.at=p.t}}else if(cur){drops.push(cur);cur=null}});if(cur)drops.push(cur);
+  const m=[];drops.forEach(d=>{const l=m[m.length-1];if(l&&d.a-l.b<=MERGE){l.b=d.b;if(d.lo<l.lo){l.lo=d.lo;l.at=d.at}}else m.push({...d})});
+  const D=m.filter(d=>d.b-d.a>=MINDUR);const mk=(s.markers||[]).slice().sort((x,y)=>x.t-y.t);
+  D.forEach(d=>{let near=null;mk.forEach(k=>{if(k.t<=d.a+2&&d.a-k.t<=180)near=k});d.mark=near});
+  return{drops:D,above:P.filter(p=>p.v>=THR).length/P.length,mk}}
+ function moments(s){const r=analyse(s);const esc=t=>String(t).replace(/</g,'&lt;');
+  $('d-over').textContent=r.above==null?'Not enough data.':`Overall: average attention ${VG.pct(s.mean_share)}, and the room was at or above ${Math.round(THR*100)}% for ${Math.round(r.above*100)}% of the session. ${r.drops.length?r.drops.length+' dip'+(r.drops.length>1?'s':'')+' below '+Math.round(THR*100)+'% lasting '+MINDUR+' s or more.':'No sustained dips.'}`;
+  $('d-moments').innerHTML=r.drops.length?`<table><thead><tr><th>Dip</th><th class="r">Lasted</th><th class="r">Lowest</th><th>What was happening just before</th></tr></thead><tbody>${r.drops.map(d=>`<tr><td class="num">${mmss(d.a)} to ${mmss(d.b)}</td><td class="r num">${Math.round(d.b-d.a)} s</td><td class="r num">${VG.pct(d.lo)} at ${mmss(d.at)}</td><td>${d.mark?'<b>'+esc(d.mark.label)+'</b> <span class="mut">('+Math.round(d.a-d.mark.t)+' s earlier)</span>':'<span class="mut">No marker set. Press Mark moment while recording to explain dips.</span>'}</td></tr>`).join('')}</tbody></table>`:'';
+  return r}
+ async function open(id){sel=id;const s=await VG.api('/api/sessions/'+id);$('detail').hidden=false;$('d-name').textContent=s.name;$('d-meta').textContent=VG.date(s.start)+' · '+VG.dur(s.duration)+' · '+s.samples+' samples';
+  $('d-avg').textContent=VG.pct(s.mean_share);$('d-peak').textContent=VG.pct(s.peak);$('d-low').textContent=VG.pct(s.low);$('d-n').textContent=s.mean_n?s.mean_n.toFixed(1):'–';
+  $('d-csv').href=`/api/sessions/${id}/csv`;$('d-csv').innerHTML=svg('down')+'Export CSV';$('d-del').innerHTML=svg('trash')+'Delete';
+  chart=chart||new LineChart($('d-chart'),{thrLabel:'DIP LEVEL ',empty:'No samples: the audience was below the privacy minimum'});const A=moments(s);chart.set(s.points.map(p=>({...p,share:p.att??p.share})).filter(p=>p.share!=null),THR,[...(s.markers||[]).map(k=>({t:k.t,type:'info'})),...A.drops.map(d=>({t:d.a,type:'warn'}))]);
+  $('d-del').onclick=async()=>{if(confirm('Delete this session?')){await VG.api('/api/sessions/'+id,{method:'DELETE'});sel=null;$('detail').hidden=true;load()}};load();$('detail').scrollIntoView({behavior:'smooth',block:'nearest'})}
+ load();document.addEventListener('themechange',()=>chart&&chart.draw())});
+</script></body></html>

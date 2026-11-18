@@ -1,0 +1,39 @@
+<!doctype html><html lang="en" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VINGAGE · Read the room, not the faces</title><meta name="description" content="Real-time audience engagement from an ordinary camera. One number for the whole room. Nobody identified, nothing recorded.">
+<link rel="stylesheet" href="/static/css/app.css"><link rel="stylesheet" href="/static/css/landing.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23f4f0e8'/%3E%3Ccircle cx='16' cy='16' r='7' fill='%23e0442a'/%3E%3C/svg%3E"></head>
+<body class="land">
+<header class="nav"><a class="word" href="/">VINGAGE<i></i></a><div class="links"><a class="hide" href="#how">How it works</a><a class="hide" href="#privacy">Privacy</a><a class="hide" href="/evidence">Evidence</a><a class="btn sm pri" href="/room" data-enter>Enter the room</a></div></header>
+<section class="hero-l"><canvas id="field"></canvas>
+ <div class="in"><div class="lbl rise" style="--d:0">Real-time audience engagement</div>
+  <h1><span><b style="--d:0">Read the room.</b></span><span><b style="--d:1"><em>Not the faces.</em></b></span></h1>
+  <p class="sub rise" style="--d:5">VINGAGE turns an ordinary camera into a live pulse of how engaged your audience is. One number for the whole room. Nobody identified, nothing recorded.</p>
+  <div class="cta rise" style="--d:6"><a class="btn pri big" href="/room" data-enter>Enter the room <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a><a class="btn big" href="#how">See how it works</a></div></div>
+ <div class="foot lbl rise" style="--d:8"><span>Below three people, it says nothing</span><span>Frames saved: 0</span></div></section>
+
+<section class="band" id="how"><div class="max"><div class="lbl reveal">What it does</div><h2 class="reveal">A pulse, <em>not</em> a surveillance feed.</h2>
+ <div class="three-l reveal">
+  <div><div class="n">01 / WATCH</div><h3>A camera, pointed at the room</h3><p>A laptop webcam, a phone or a CCTV feed. Each face is read for where its head points, in memory, and forgotten.</p>
+   <div class="viz"><svg class="eye" viewBox="0 0 100 48"><path d="M2 24C20 4 80 4 98 24C80 44 20 44 2 24Z" fill="none" stroke="currentColor" stroke-width="2"/><g class="lid"><circle cx="50" cy="24" r="12" fill="#16130f"/><circle cx="54" cy="20" r="3.5" fill="#f4f0e8"/></g></svg></div></div>
+  <div><div class="n">02 / ESTIMATE</div><h3>A model scores each moment</h3><p>Each head is compared with the direction of the presenter or screen. A model trained on 8,571 labelled clips adds a behavioural engagement score.</p>
+   <div class="viz"><div class="bars"></div></div></div>
+  <div><div class="n">03 / SUMMARISE</div><h3>Faces melt into one figure</h3><p>Scores merge into a single group number. If fewer than three people are in view, the screen shows nothing at all.</p>
+   <div class="viz"><div class="merge"><div class="num">72%</div></div></div></div>
+ </div></div></section>
+
+<section class="band"><div class="max"><div class="lbl reveal">Where it helps</div><h2 class="reveal">Know the moment attention slips, <em>while you can still act.</em></h2>
+ <div class="uses reveal"><span>Lectures</span><span>Workshops</span><span>Meetings</span><span>Keynotes</span><span>Town halls</span><span>Training</span></div></div></section>
+
+<section class="band dark-l" id="privacy"><div class="max"><div class="lbl reveal">Built to forget</div><h2 class="reveal">Nothing about a person survives the second it was <em>measured.</em></h2>
+ <div class="facts reveal"><div><div class="v">0<small>frames</small></div><p>No video, photo or preview is written anywhere.</p></div><div><div class="v">0<small>identities</small></div><p>No names, no face matching, no per-person history kept.</p></div><div><div class="v">3<small>minimum</small></div><p>The group figure appears only when at least three people are counted.</p></div></div>
+ <p class="reveal" style="margin-top:44px"><a class="btn big" style="color:#f2ede3;border-color:#3b362b" href="/privacy">Read the privacy design</a></p></div></section>
+
+<section class="band"><div class="max"><div class="lbl reveal">Honest numbers</div><h2 class="reveal">Benchmarked in the open, <em>limits included.</em></h2>
+ <div class="nums reveal"><div><div class="v"><span data-to="8571">0</span></div><p>labelled clips in DAiSEE, the public benchmark used for training and testing.</p></div>
+  <div><div class="v"><span data-to="0.57" data-dec="2">0</span></div><p>macro-F1 for engaged versus not engaged on the official test split.</p></div>
+  <div><div class="v"><span data-to="0.33" data-dec="2">0</span></div><p>macro-F1 for the four-level task. The labels are noisy, so we show limits beside results.</p></div></div>
+ <p class="reveal" style="margin-top:44px"><a class="btn big" href="/evidence">See the evidence</a></p></div></section>
+
+<section class="end"><div class="lbl reveal" style="margin-bottom:26px">Ready when the room is</div><h2 class="reveal">Press play. <em>Feel the room.</em></h2><a class="btn pri big reveal" href="/room" data-enter>Enter the room <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></section>
+<footer class="l"><span>VINGAGE · CSET344 Image and Video Processing · Bennett University</span><span>Trained on DAiSEE (Gupta et al., 2016) · Face landmarks by Google MediaPipe</span></footer>
+<script src="/static/js/landing.js"></script></body></html>

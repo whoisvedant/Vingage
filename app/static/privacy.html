@@ -1,0 +1,31 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Privacy · VINGAGE</title><link rel="stylesheet" href="/static/css/app.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23100e0b'/%3E%3Ccircle cx='16' cy='16' r='7' fill='%23ff6a45'/%3E%3C/svg%3E">
+<script src="/static/js/app.js"></script><script src="/static/js/charts.js"></script></head><body>
+<main class="wrap">
+ <div class="ph"><div><div class="lbl">Privacy by design</div><h1 style="margin-top:14px">Built to <em>forget.</em></h1><p>VINGAGE measures the mood of a room, not the people in it. Privacy is enforced by how the system is built, not by a policy page.</p></div></div>
+ <div class="g g3">
+  <div><span class="tag">In memory, briefly</span><h3 class="serif" style="font-size:34px;margin:16px 0 4px">Per-person signals</h3><ul class="plain"><li>Face landmarks and head pose</li><li>Eye openness, gaze, blinks, motion</li><li>A rolling 10-second window per face</li></ul><p class="mut" style="font-size:13px;margin-top:12px">Scored, then overwritten. A face that leaves the view is dropped after 3 seconds.</p></div>
+  <div><span class="tag" style="color:var(--verm);border-color:var(--verm)">Never stored or sent</span><h3 class="serif" style="font-size:34px;margin:16px 0 4px">Anything identifying</h3><ul class="plain"><li>Camera frames or video</li><li>Face images or landmark data</li><li>Names, IDs, face embeddings</li><li>Any per-person history or identity</li></ul><p class="mut" style="font-size:13px;margin-top:12px">There is no recording path in the code. The live view is shown only on this computer, can blur faces, and is never saved or sent over the network.</p></div>
+  <div><span class="tag" style="color:var(--moss);border-color:var(--moss)">Shown and saved</span><h3 class="serif" style="font-size:34px;margin:16px 0 4px">Group statistics</h3><ul class="plain"><li>Share of the audience facing the focus</li><li>Engagement-model share and mean score</li><li>Head count, for the minimum rule</li></ul><p class="mut" style="font-size:13px;margin-top:12px">Saved sessions hold only these numbers and a timestamp.</p></div></div>
+ <div class="g g2 sec">
+  <div class="panel"><span class="lbl">The minimum-group rule</span><p style="margin:10px 0 18px;color:var(--ink2)">No statistic is shown unless at least k people are counted. Try it.</p>
+   <div style="display:flex;align-items:center;gap:20px"><div style="flex:1"><span class="lbl">People in view</span><input type="range" id="kn" min="1" max="10" value="2" style="margin-top:10px"></div><div class="val" id="knv">2</div></div>
+   <div class="lbl" style="margin-top:18px">Minimum group size (k): <span id="kk" style="color:var(--ink)">3</span></div><div id="kdemo" class="banner" style="margin:16px 0 0"></div></div>
+  <div class="panel"><span class="lbl">What a saved session looks like</span><p class="mut" style="font-size:13.5px;margin:10px 0 0">This is the entire record kept for each sample. No field could identify a person.</p>
+   <pre style="font:12.5px/1.6 var(--mono);background:var(--paper2);border:1px solid var(--line);padding:14px;margin:14px 0 0;overflow:auto">{
+  "id": "a1b2c3d4",
+  "name": "Lecture 3",
+  "points": [
+    { "t": 12.0, "share": 0.67,
+      "score": 0.61, "n": 6 }
+  ]
+}</pre></div></div>
+ <div class="sec"><span class="lbl">Responsible use</span><ul class="plain"><li>Tell the people in the room that a camera is measuring group engagement.</li><li>Engagement here is an estimate from visible behaviour. A person looking away may be thinking; a person looking ahead may be daydreaming.</li><li>Do not use the output to rank, grade or discipline individuals. The system cannot produce individual results.</li><li>The training data (DAiSEE) was collected with participant consent for research and is not included in this project.</li></ul></div>
+</main>
+<script>
+document.addEventListener('DOMContentLoaded',()=>{const $=id=>document.getElementById(id);let k=3;
+ function up(){const n=+$('kn').value;$('knv').textContent=n;const ok=n>=k,e=$('kdemo');e.className='banner '+(ok?'info':'');
+  e.innerHTML=ok?`<b>${n} people:</b> at least ${k} are in view, so the group statistic is shown.`:`<b>${n} ${n===1?'person':'people'}:</b> fewer than ${k}, so nothing is shown. A figure for ${n===1?'one person':'two people'} would reveal an individual.`}
+ $('kn').oninput=up;VG.api('/api/info').then(i=>{k=i.k_min;$('kk').textContent=k;up()}).catch(up)});
+</script></body></html>
